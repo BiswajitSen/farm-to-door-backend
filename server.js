@@ -21,6 +21,7 @@ const createApp = () => {
     app.use(bodyParser.json());
     app.use('/api/products', productRoutes);
     app.use('/api/orders', orderRoutes);
+    app.use('/api/images/', express.static('resources/images'));
     return app;
 };
 
