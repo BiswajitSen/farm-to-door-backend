@@ -38,4 +38,16 @@ router.post(
     }
 );
 
+router.get(
+    '/',
+    async (req, res) => {
+        try {
+            const orders = await Orders.find();
+            console.log({orders});
+            res.json(orders);
+        } catch (err) {
+            res.status(500).json({ message: 'Error fetching orders', error: err.message });
+        }
+    }
+)
 module.exports = router;
