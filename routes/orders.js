@@ -4,7 +4,6 @@ const Product = require('../models/product');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 
-// Create a new order with multiple products
 router.post(
     '/',
     [
@@ -21,7 +20,8 @@ router.post(
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { productIds, deliveryAddress } = req.body;
+        const { productIds, deliveryAddress, username } = req.body;
+        console.log({ productIds, deliveryAddress, username });
         try {
             const productIdsArray = productIds.map(p => p.productId);
             const products = await Product.find({ _id: { $in: productIdsArray } });
@@ -29,7 +29,7 @@ router.post(
                 return res.status(404).json({ message: 'One or more products not found' });
             }
 
-            const newOrder = new Orders({ productIds, deliveryAddress });
+            const newOrder = new Orders({ productIds, deliveryAddress, username });
             await newOrder.save();
             res.status(201).json(newOrder);
         } catch (err) {

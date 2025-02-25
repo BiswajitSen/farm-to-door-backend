@@ -3,9 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const productRoutes = require('./routes/products');
-const orderRoutes = require('./routes/orders');
 const populateProducts = require('./populateProducts');
+const authMiddleware = require('./middlewares/auth');
 
 const port = process.env.PORT || 8080;
 
@@ -19,9 +18,12 @@ const createApp = () => {
     app.use(logger);
     app.use(cors());
     app.use(bodyParser.json());
-    app.use('/api/products', productRoutes);
-    app.use('/api/orders', orderRoutes);
+    app.use('/api/signup', require('./routes/signup'));
+    app.use('/api/login', require('./routes/login'));
+    app.use('/api/products', require('./routes/products'));
     app.use('/api/images/', express.static('resources/images'));
+    app.use(authMiddleware);
+    app.use('/api/orders', require('./routes/orders'));
     return app;
 };
 

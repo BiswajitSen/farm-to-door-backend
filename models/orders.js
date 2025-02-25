@@ -8,7 +8,8 @@ const orderSchema = new mongoose.Schema({
     deliveryAddress: { type: String, required: true, minlength: 10 },
     status: { type: String, default: 'Pending' },
     orderDate: { type: Date, default: Date.now },
-    productCount: { type: Number, default: 0 }
+    productCount: { type: Number, default: 0 },
+    username: { type: String, required: true }
 });
 
 orderSchema.pre('save', function(next) {
