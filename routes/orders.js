@@ -1,6 +1,7 @@
 const express = require('express');
 const Orders = require('../models/orders');
 const Product = require('../models/product');
+const PlacedOrders = require('../models/placedOrders');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 
@@ -21,7 +22,6 @@ router.post(
         }
 
         const { productIds, deliveryAddress, username } = req.body;
-        console.log({ productIds, deliveryAddress, username });
         try {
             const productIdsArray = productIds.map(p => p.productId);
             const products = await Product.find({ _id: { $in: productIdsArray } });
@@ -31,6 +31,21 @@ router.post(
 
             const newOrder = new Orders({ productIds, deliveryAddress, username });
             await newOrder.save();
+            console.log({username})
+            JSON.stringify(productIds, null, 2);
+
+            const placedOrderDetails = productIds.map(p => {
+                return new PlacedOrders({
+                    productId: p.productId,
+                    quantity: p.quantity,
+                    boughtFrom: p.boughtFrom,
+                    username: username
+                });
+            });
+
+            await PlacedOrders.insertMany(placedOrderDetails);
+            console.log("DEBUG HERE");
+
             res.status(201).json(newOrder);
         } catch (err) {
             res.status(500).json({ message: 'Error placing order', error: err.message });
@@ -49,5 +64,6 @@ router.get(
             res.status(500).json({ message: 'Error fetching orders', error: err.message });
         }
     }
-)
+);
+
 module.exports = router;

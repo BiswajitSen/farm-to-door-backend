@@ -24,6 +24,7 @@ const createApp = () => {
     app.use('/api/images/', express.static('resources/images'));
     app.use(authMiddleware);
     app.use('/api/orders', require('./routes/orders'));
+    app.use('/api/vendor', require('./routes/vendor'));
     return app;
 };
 
