@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const Product = require('../models/Product');
-const Orders = require('../models/Orders');
+const PlacedOrders = require('../models/PlacedOrders');
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -64,10 +64,8 @@ router.get('/orders', async (req, res) => {
     }
 
     try {
-        console.log({ username });
-        const orders = await Orders.find({ 'productIds.boughtFrom': username });
+        const orders = await PlacedOrders.find({ boughtFrom: username });
         console.log({ orders });
-
         res.status(200).json(orders);
     } catch (err) {
         res.status(500).json({ message: 'Error fetching orders', error: err.message });
