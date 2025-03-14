@@ -35,6 +35,8 @@ router.post(
             const placedOrderDetails = productIds.map(p => {
                 return new PlacedOrders({
                     productId: p.productId,
+                    productName: p.productName,
+                    imageUrl: p.imageUrl,
                     quantity: p.quantity,
                     boughtFrom: p.boughtFrom,
                     username: username
