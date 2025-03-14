@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="c07f5340-9647-4514-b0ab-929c2fabae2f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/populateProducts.js" beforeDir="false" afterPath="$PROJECT_DIR$/populateProducts.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +56,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1741939047176</updated>
-      <workItem from="1741939048455" duration="6885000" />
+      <workItem from="1741939048455" duration="7910000" />
     </task>
     <servers />
   </component>

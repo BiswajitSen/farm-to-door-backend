@@ -1,4 +1,4 @@
-const Product = require('./models/Product');
+const Product = require('./models/product');
 
 const products = [
     { name: 'Product 1', description: 'Description 1', price: 10, imageUrl: 'image1.avif', quantity: 1, soldBy: 'user@example.com' },
