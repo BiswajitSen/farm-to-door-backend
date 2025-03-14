@@ -31,8 +31,6 @@ router.post(
 
             const newOrder = new Orders({ productIds, deliveryAddress, username });
             await newOrder.save();
-            console.log({username})
-            JSON.stringify(productIds, null, 2);
 
             const placedOrderDetails = productIds.map(p => {
                 return new PlacedOrders({
@@ -44,7 +42,17 @@ router.post(
             });
 
             await PlacedOrders.insertMany(placedOrderDetails);
-            console.log("DEBUG HERE");
+
+            // Decrease the quantity of each product
+            for (const p of productIds) {
+                if (p.quantity === 0) {
+                    return res.status(400).json({ message: 'Invalid request: product quantity cannot be 0' });
+                }
+                await Product.updateOne(
+                    { _id: p.productId },
+                    { $inc: { quantity: -p.quantity } }
+                );
+            }
 
             res.status(201).json(newOrder);
         } catch (err) {
@@ -57,8 +65,7 @@ router.get(
     '/',
     async (req, res) => {
         try {
-            const orders = await Orders.find();
-            console.log({orders});
+            const orders = await Orders.find({ username: req.query.username });
             res.json(orders);
         } catch (err) {
             res.status(500).json({ message: 'Error fetching orders', error: err.message });
