@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const Product = require('../models/product');
+const Orders = require('../models/orders');
 const PlacedOrders = require('../models/placedOrders');
 const router = express.Router();
 
@@ -84,6 +85,41 @@ router.delete('/products/:id', async (req, res) => {
         res.status(200).json({ message: 'Product deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: 'Error deleting product', error: err.message });
+    }
+});
+
+router.put('/orders/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { status, username } = req.body;
+
+    if (!status || !username) {
+        return res.status(400).json({ message: 'Missing required fields: status and/or username' });
+    }
+
+    try {
+        const placedOrder = await PlacedOrders.findOneAndUpdate(
+            { _id: id, boughtFrom: username },
+            { status },
+            { new: true }
+        );
+
+        if (!placedOrder) {
+            return res.status(404).json({ message: 'Placed order not found or not bought from the specified user' });
+        }
+
+        const order = await Orders.findOneAndUpdate(
+            { 'productIds.productId': placedOrder.productId, 'productIds.boughtFrom': username },
+            { $set: { 'productIds.$.status': status } },
+            { new: true }
+        );
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found or not placed by the specified user' });
+        }
+
+        res.status(200).json({ message: 'Order status updated successfully', placedOrder, order });
+    } catch (err) {
+        res.status(500).json({ message: 'Error updating order status', error: err.message });
     }
 });
 
