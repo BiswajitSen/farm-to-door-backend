@@ -5,6 +5,8 @@ const Product = require('../models/product');
 const Orders = require('../models/orders');
 const PlacedOrders = require('../models/placedOrders');
 const router = express.Router();
+const { asyncHandler } = require('../src/utils/asyncHandler');
+const { getAuthedUsername } = require('../src/utils/getAuthedUsername');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -27,101 +29,101 @@ const validateAddProductRequest = (req, res, next) => {
     next();
 };
 
-router.post('/addProducts', upload.single('image'), validateAddProductRequest, async (req, res) => {
+router.post('/addProducts', upload.single('image'), validateAddProductRequest, asyncHandler(async (req, res) => {
     const { name, description, price, quantity } = req.body;
+    const authedUsername = getAuthedUsername(req);
     const { username } = req.query;
+
+    if (authedUsername && username && username !== authedUsername) {
+        return res.status(403).json({ message: 'Cannot add products for another user' });
+    }
     const imageUrl = `${req.file.filename}`;
 
-    try {
-        const newProduct = new Product({ name, description, price, quantity, imageUrl, soldBy: username });
-        await newProduct.save();
-        res.status(201).json(newProduct);
-    } catch (err) {
-        res.status(500).json({ message: 'Error saving product', error: err.message });
-    }
-});
+    const newProduct = new Product({ name, description, price, quantity, imageUrl, soldBy: username });
+    await newProduct.save();
+    res.status(201).json(newProduct);
+}));
 
-router.get('/products', async (req, res) => {
+router.get('/products', asyncHandler(async (req, res) => {
+    const authedUsername = getAuthedUsername(req);
     const { username } = req.query;
 
     if (!username) {
         return res.status(400).json({ message: 'Missing required query parameter: username' });
     }
-
-    try {
-        const products = await Product.find({ soldBy: username });
-        console.log({ products });
-        res.status(200).json(products);
-    } catch (err) {
-        res.status(500).json({ message: 'Error fetching products', error: err.message });
+    if (authedUsername && username !== authedUsername) {
+        return res.status(403).json({ message: 'Cannot fetch products for another user' });
     }
-});
 
-router.get('/orders', async (req, res) => {
+    const products = await Product.find({ soldBy: username });
+    res.status(200).json(products);
+}));
+
+router.get('/orders', asyncHandler(async (req, res) => {
+    const authedUsername = getAuthedUsername(req);
     const { username } = req.query;
 
     if (!username) {
         return res.status(400).json({ message: 'Missing required query parameter: username' });
     }
-
-    try {
-        const orders = await PlacedOrders.find({ boughtFrom: username });
-        console.log({ orders });
-        res.status(200).json(orders);
-    } catch (err) {
-        res.status(500).json({ message: 'Error fetching orders', error: err.message });
+    if (authedUsername && username !== authedUsername) {
+        return res.status(403).json({ message: 'Cannot fetch orders for another user' });
     }
-});
 
-router.delete('/products/:id', async (req, res) => {
+    const orders = await PlacedOrders.find({ boughtFrom: username });
+    res.status(200).json(orders);
+}));
+
+router.delete('/products/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
 
-    try {
-        const product = await Product.findByIdAndDelete(id);
-        if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
-        }
-
-        res.status(200).json({ message: 'Product deleted successfully' });
-    } catch (err) {
-        res.status(500).json({ message: 'Error deleting product', error: err.message });
+    const authedUsername = getAuthedUsername(req);
+    if (!authedUsername) {
+        return res.status(401).json({ message: 'Unauthorized' });
     }
-});
 
-router.put('/orders/:id/status', async (req, res) => {
+    const product = await Product.findOneAndDelete({ _id: id, soldBy: authedUsername });
+    if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json({ message: 'Product deleted successfully' });
+}));
+
+router.put('/orders/:id/status', asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { status, username } = req.body;
+    const authedUsername = getAuthedUsername(req);
 
     if (!status || !username) {
         return res.status(400).json({ message: 'Missing required fields: status and/or username' });
     }
-
-    try {
-        const placedOrder = await PlacedOrders.findOneAndUpdate(
-            { _id: id, boughtFrom: username },
-            { status },
-            { new: true }
-        );
-
-        if (!placedOrder) {
-            return res.status(404).json({ message: 'Placed order not found or not bought from the specified user' });
-        }
-
-        const order = await Orders.findOneAndUpdate(
-            { 'productIds.productId': placedOrder.productId, 'productIds.boughtFrom': username },
-            { $set: { 'productIds.$.status': status } },
-            { new: true }
-        );
-
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found or not placed by the specified user' });
-        }
-
-        res.status(200).json({ message: 'Order status updated successfully', placedOrder, order });
-    } catch (err) {
-        res.status(500).json({ message: 'Error updating order status', error: err.message });
+    if (authedUsername && username !== authedUsername) {
+        return res.status(403).json({ message: 'Cannot update orders for another user' });
     }
-});
+
+    const placedOrder = await PlacedOrders.findOneAndUpdate(
+        { _id: id, boughtFrom: username },
+        { status },
+        { new: true }
+    );
+
+    if (!placedOrder) {
+        return res.status(404).json({ message: 'Placed order not found or not bought from the specified user' });
+    }
+
+    const order = await Orders.findOneAndUpdate(
+        { 'productIds.productId': placedOrder.productId, 'productIds.boughtFrom': username },
+        { $set: { 'productIds.$.status': status } },
+        { new: true }
+    );
+
+    if (!order) {
+        return res.status(404).json({ message: 'Order not found or not placed by the specified user' });
+    }
+
+    res.status(200).json({ message: 'Order status updated successfully', placedOrder, order });
+}));
 
 
 module.exports = router;

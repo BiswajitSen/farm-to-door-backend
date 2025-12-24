@@ -17,6 +17,8 @@ const authMiddleware = async (req, res, next) => {
         }
 
         req.user = user;
+        // Convenience for routes; prefer using req.user.username when possible
+        req.auth = { username: decoded.username, token };
         next();
     } catch (err) {
         res.status(401).json({ message: 'Invalid token', error: err.message });

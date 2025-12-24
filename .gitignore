@@ -2,3 +2,10 @@ node_modules
 .DS_Store
 *.pem
 .env*
+
+# IDE/editor
+.idea/
+
+# Local uploads / test artifacts
+resources/images/*.jpg
+resources/images/test-image.txt
